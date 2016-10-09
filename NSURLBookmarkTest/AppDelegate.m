@@ -17,6 +17,11 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     
+    NSString *content = [self retriveFileFromSavedBookmark];
+    NSLog(@"stored bookmark's content:");
+    NSLog(@"%@", content);
+    
+    
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     [panel setCanChooseFiles:YES];
     [panel beginWithCompletionHandler:^(NSInteger result) {
@@ -29,11 +34,52 @@
         NSLog(@"%@", bookmarkString);
         
         if(bookmarkString) {
+            [[NSUserDefaults standardUserDefaults] setObject:bookmarkString forKey:@"bookmarkString"];
+            
             NSString *resolvedPath = [self getFilePathFromBookmarkString:bookmarkString];
             NSLog(@"%@", resolvedPath);
+            
+            NSURL *url3 = [NSURL fileURLWithPath:resolvedPath];
+            [url3 startAccessingSecurityScopedResource];
+            NSError *error = nil;
+            NSString *string2 = [NSString stringWithContentsOfURL:url3 encoding:NSUTF8StringEncoding error:&error];
+            if(error) {
+                NSLog(@"%@", error);
+            }
+            NSLog(@"%@", string2);
+            [url3 stopAccessingSecurityScopedResource];
         }
     }];
 }
+
+
+- (NSString *)retriveFileFromSavedBookmark {
+    NSString *bookmarkString = [[NSUserDefaults standardUserDefaults] objectForKey:@"bookmarkString"];
+    
+    if(bookmarkString) {
+        NSData *savedBookmark = [[NSData alloc] initWithBase64EncodedString:bookmarkString options:NSDataBase64DecodingIgnoreUnknownCharacters];
+        NSURL *url = [NSURL URLByResolvingBookmarkData:savedBookmark options:NSURLBookmarkResolutionWithSecurityScope relativeToURL:nil bookmarkDataIsStale:nil error:nil];
+        
+        NSError *error = nil;
+        
+        [url startAccessingSecurityScopedResource];
+        
+        NSString *resolvedPath = [self getFilePathFromBookmarkString:bookmarkString];
+        NSURL *url2 = [NSURL fileURLWithPath:resolvedPath];
+        NSString *string = [NSString stringWithContentsOfURL:url2 encoding:NSUTF8StringEncoding error:&error];
+        
+        [url stopAccessingSecurityScopedResource];
+        
+        if(error) {
+            return error.localizedDescription;
+        } else {
+            return string;
+        }
+    } else {
+        return @"no bookmark";
+    }
+}
+
 
 - (NSString *)getSerializedBookmark:(NSString *)path {
     NSURL *url = [NSURL fileURLWithPath:path];
@@ -61,7 +107,8 @@
         NSLog(@"%@", error);
         return nil;
     } else {
-        return url.absoluteString;
+        NSLog(@"%@", url);
+        return url.path;
     }
 }
 

@@ -10,6 +10,7 @@
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
+- (NSString *)retriveFileFromSavedBookmark;
 - (NSString *)getSerializedBookmark:(NSString *)filePath;
 - (NSString *)getFilePathFromBookmarkString:(NSString *)bookmarkString;
 
