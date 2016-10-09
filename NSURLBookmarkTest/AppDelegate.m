@@ -17,21 +17,27 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     
-    NSString *filePath = @"~/Desktop/test.txt";
-    NSString *absoluteFilePath = [filePath stringByExpandingTildeInPath];
-    //NSLog(@"%@", absoluteFilePath);
-    
-    NSString *bookmarkString = [self getSerializedBookmark:absoluteFilePath];
-    NSLog(@"%@", bookmarkString);
-    
-    if(bookmarkString) {
-        NSString *resolvedPath = [self getFilePathFromBookmarkString:bookmarkString];
-        NSLog(@"%@", resolvedPath);
-    }
+    NSOpenPanel *panel = [NSOpenPanel openPanel];
+    [panel setCanChooseFiles:YES];
+    [panel beginWithCompletionHandler:^(NSInteger result) {
+        NSURL *url = [[panel URLs] objectAtIndex:0];
+        
+        NSLog(@"%@", url);
+        
+        NSString *path = url.path;
+        NSString *bookmarkString = [self getSerializedBookmark:path];
+        NSLog(@"%@", bookmarkString);
+        
+        if(bookmarkString) {
+            NSString *resolvedPath = [self getFilePathFromBookmarkString:bookmarkString];
+            NSLog(@"%@", resolvedPath);
+        }
+    }];
 }
 
 - (NSString *)getSerializedBookmark:(NSString *)path {
     NSURL *url = [NSURL fileURLWithPath:path];
+    NSLog(@"%@", url.absoluteString);
     
     NSError *error = nil;
     NSData *bookmark = [url bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope includingResourceValuesForKeys:nil relativeToURL:nil error:&error];
